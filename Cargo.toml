@@ -1,0 +1,9 @@
+[package]
+name = "wol"
+version = "0.1.2"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.20", features = ["derive"] }
+fltk = "1.4.35"
+configparser = "3.1.0"

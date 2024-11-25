@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 
 use enums::{Align, Color};
 use fltk::{prelude::*, *};

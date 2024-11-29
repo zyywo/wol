@@ -29,6 +29,54 @@ pub fn send_wol_packet(m: &String, broadcast: &String) {
         .expect("发送失败");
 }
 
+/** 发送ehtertype是0x0842类型的WOL报文
+
+interface_name是网口名称, m是将要唤醒主机的MAC地址
+ */
+pub fn send_wol_eth(interface_name: &String, m: &str) {
+    use pnet::datalink::Channel::Ethernet;
+    use pnet::datalink::{self, NetworkInterface};
+
+    // Invoke as echo <interface name>
+    let interface_names_match = |iface: &NetworkInterface| iface.name == *interface_name;
+
+    // Find the network interface with the provided name
+    let interfaces = datalink::interfaces();
+    let interface = interfaces
+        .into_iter()
+        .filter(interface_names_match)
+        .next()
+        .unwrap();
+
+    // Create a new channel, dealing with layer 2 packets
+    let (mut tx, mut _rx) = match datalink::channel(&interface, Default::default()) {
+        Ok(Ethernet(tx, rx)) => (tx, rx),
+        Ok(_) => panic!("Unhandled channel type"),
+        Err(e) => panic!(
+            "An error occurred when creating the datalink channel: {}",
+            e
+        ),
+    };
+
+    //构造并发送WOL报文
+    let mac = mac_to_u8(m);
+    let mut magic_packet = Vec::new();
+    for _ in 1..=6 {
+        magic_packet.push(255);
+    }
+    for _ in 1..=16 {
+        magic_packet = [magic_packet, mac.clone()].concat();
+    }
+    let mut eth_packet = [
+        [0xff, 0xff, 0xff, 0xff, 0xff, 0xff],
+        interface.mac.unwrap().octets(),
+    ]
+    .concat();
+    eth_packet.append(&mut vec![0x08, 0x42]);
+    eth_packet.append(&mut magic_packet);
+    tx.send_to(&eth_packet, None);
+}
+
 /**把mac地址转换为u8列表
 
 比如 `01:02:03:dd:ee:ff => [1, 2, 3, 221, 238, 255]`
@@ -71,6 +119,7 @@ fn bytes_str_to_u8(s: &str) -> Vec<u8> {
 mod tests {
     use crate::utils::bytes_str_to_u8;
     use crate::utils::mac_to_u8;
+    use crate::utils::send_wol_eth;
     #[test]
     fn test_to_u8() {
         let b = bytes_str_to_u8("ff00ff10");
@@ -81,5 +130,7 @@ mod tests {
             a, b
         );
         assert_eq!(vec![1, 2, 3, 221, 238, 255], mac_to_u8("01:02:03:dd:ee:ff"));
+
+        assert_eq!((), send_wol_eth(&"ens18".to_string(), "11:22:33:44:55:66"));
     }
 }

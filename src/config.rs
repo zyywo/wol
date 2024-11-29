@@ -7,6 +7,7 @@ pub struct WOLConfig {
     hosts_dict: HashMap<String, String>,
     hostname_max_size: usize,
     broadcast: String,
+    interface: String,
 }
 
 impl WOLConfig {
@@ -17,6 +18,7 @@ impl WOLConfig {
             hosts_dict: HashMap::new(),
             hostname_max_size: 0,
             broadcast: "255.255.255.255".to_string(),
+            interface: "".to_string(),
         }
         .loadconfig()
     }
@@ -26,6 +28,7 @@ impl WOLConfig {
         let mut cfg = Ini::new();
         if let Err(_) = cfg.load(&self.path) {
             cfg.set("General", "broadcast", Some("255.255.255.255".to_string()));
+            cfg.set("General", "interface", Some("ens18".to_string()));
             cfg.set("PC1", "ip", Some("192.168.1.2".to_string()));
             cfg.set("PC1", "mac", Some("11:22:33:44:55:66".to_string()));
             cfg.set("PC2", "ip", Some("192.168.1.3".to_string()));
@@ -36,7 +39,8 @@ impl WOLConfig {
 
         for i in cfg.get_map_ref() {
             if i.0 == "general" {
-                self.broadcast = i.1.get("broadcast").unwrap().as_ref().unwrap().clone();
+                self.broadcast = i.1.get("broadcast").unwrap().as_ref().expect("配置文件中没有broadcast").clone();
+                self.interface = i.1.get("interface").unwrap().as_ref().expect("配置文件中没有interface").clone();
             } else {
                 let hostname_len = i.0.len();
                 if self.hostname_max_size < hostname_len {
@@ -66,5 +70,9 @@ impl WOLConfig {
 
     pub fn get_broadcast(&self) -> String {
         self.broadcast.clone()
+    }
+
+    pub fn get_interface(&self) -> String {
+        self.interface.clone()
     }
 }

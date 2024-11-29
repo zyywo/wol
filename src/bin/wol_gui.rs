@@ -1,15 +1,30 @@
 #![windows_subsystem = "windows"]
 
+#[cfg(not(debug_assertions))]
+use std::env;
+
 use enums::{Align, Color};
 use fltk::{prelude::*, *};
-use std::net::UdpSocket;
 use wol::config::WOLConfig;
+use wol::utils::{send_wol_eth, send_wol_packet};
 
 static WIDTH: i32 = 500;
 static HEIGHT: i32 = 400;
 
 fn main() {
+    #[cfg(not(debug_assertions))]
+    let mut wolcfg = WOLConfig::new(
+        env::current_exe()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .join("config.ini")
+            .to_str()
+            .unwrap(),
+    );
+    #[cfg(debug_assertions)]
     let mut wolcfg = WOLConfig::new("config.ini");
+
     let app = app::App::default().load_system_fonts();
     let mut win = window::Window::default()
         .with_label(format!("Wake On LAN - rust v{}", env!("CARGO_PKG_VERSION")).as_str())
@@ -42,15 +57,20 @@ fn main_panel(parent: &mut group::Flex, wolcfg: &mut WOLConfig) {
         }
 
         let mut op_col = group::Flex::default().column();
+        let if_name_text = frame::Frame::default().with_label("网口:");
+        let mut if_name_input = input::Input::default();
+        if_name_input.set_value(wolcfg.get_interface().as_str());
         let broadcast_text = frame::Frame::default().with_label("广播地址:");
         let mut broadcast_input = input::Input::default();
-        broadcast_input.set_value("255.255.255.255");
+        broadcast_input.set_value(wolcfg.get_broadcast().as_str());
         let p = frame::Frame::default();
         let mut selected_host = output::Output::default();
         let mut btn = button::Button::default()
             .with_label("唤醒")
             .with_size(50, 25);
 
+        op_col.fixed(&if_name_text, 25);
+        op_col.fixed(&if_name_input, 25);
         op_col.fixed(&broadcast_text, 25);
         op_col.fixed(&broadcast_input, 25);
         op_col.fixed(&p, 50);
@@ -70,64 +90,14 @@ fn main_panel(parent: &mut group::Flex, wolcfg: &mut WOLConfig) {
         });
 
         btn.set_callback(move |_btn| {
-            let broadcast = broadcast_input.value();
             if let Some(x) = host_list.selected_text() {
                 let host: Vec<&str> = x.split(",").collect();
-                send_wol_packet(&host[0].to_string(), &broadcast);
+                send_wol_packet(&host[0].to_string(), &broadcast_input.value());
+                send_wol_eth(&if_name_input.value(), &host[0].to_string());
             }
         });
     }
 
     parent.fixed(&w, 20);
     parent.add_resizable(&middle_row);
-}
-
-fn send_wol_packet(m: &String, broadcast: &String) {
-    let mac = mac_str_to_u8(m);
-    let mut packet = Vec::new();
-    for _ in 1..=6 {
-        packet.push(255);
-    }
-    for _ in 1..=16 {
-        packet = [packet.clone(), mac.to_vec()].concat();
-    }
-
-    let socket = UdpSocket::bind("0.0.0.0:0").expect("绑定接口失败");
-    socket.set_broadcast(true).expect("启用广播模式失败");
-    socket
-        .send_to(&packet, format!("{}:7", broadcast))
-        .expect("发送失败");
-    socket
-        .send_to(&packet, format!("{}:9", broadcast))
-        .expect("发送失败");
-}
-
-fn mac_str_to_u8(s: &str) -> [u8; 6] {
-    let s1 = s.replace(":", "");
-    let val: [u8; 6] = hex_str_to_u8(s1.as_str()).try_into().unwrap();
-    val
-}
-
-fn hex_str_to_u8(s: &str) -> Vec<u8> {
-    let mut return_val = Vec::new();
-
-    let mut siter = s.chars().enumerate();
-    while let Some((i, v)) = siter.next() {
-        if i % 2 != 0 {
-            continue;
-        };
-        let h = match v.to_digit(16) {
-            Some(x) => x,
-            None => 255,
-        };
-
-        let l = match siter.next().unwrap().1.to_digit(16) {
-            Some(x) => x,
-            None => 255,
-        };
-
-        let a: u8 = (h * 16 + l).try_into().unwrap();
-        return_val.push(a);
-    }
-    return_val
 }

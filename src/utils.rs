@@ -31,20 +31,22 @@ pub fn send_wol_packet(m: &String, broadcast: &String) {
 
 /** 发送ehtertype是0x0842类型的WOL报文
 
-interface_name是网口名称, m是将要唤醒主机的MAC地址
+interface_name是网口名称或网口的MAC地址，MAC地址是冒号分隔的格式
+
+m是将要唤醒的MAC地址
  */
 pub fn send_wol_eth(interface_name: &String, m: &str) {
     use pnet::datalink::Channel::Ethernet;
     use pnet::datalink::{self, NetworkInterface};
 
     // Invoke as echo <interface name>
-    let interface_names_match = |iface: &NetworkInterface| iface.name == *interface_name;
+    let interface_match = |iface: &NetworkInterface| iface.name == *interface_name || iface.mac.unwrap().to_string() == interface_name.to_lowercase();
 
     // Find the network interface with the provided name
     let interfaces = datalink::interfaces();
     let interface = interfaces
         .into_iter()
-        .filter(interface_names_match)
+        .filter(interface_match)
         .next()
         .unwrap();
 
@@ -131,6 +133,8 @@ mod tests {
         );
         assert_eq!(vec![1, 2, 3, 221, 238, 255], mac_to_u8("01:02:03:dd:ee:ff"));
 
-        assert_eq!((), send_wol_eth(&"ens18".to_string(), "11:22:33:44:55:66"));
+        assert_eq!((), send_wol_eth(&"BC:24:11:11:A0:F7".to_string(), "11:22:33:44:55:66"));
+
+
     }
 }

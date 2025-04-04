@@ -1,14 +1,44 @@
 //! 主要提供发送wol报文的功能
 
-use std::net::UdpSocket;
+use std::{collections::HashMap, net::UdpSocket};
+use sysinfo::Networks;
 
-/**发送wol报文
+/**列出系统的网卡
+
+*/
+pub fn netinfo() -> Vec<HashMap<&'static str, String>> {
+    let mut a: Vec<HashMap<&'static str, String>> = vec![];
+    let b = Networks::new_with_refreshed_list();
+    for (name, data) in &b {
+        let ip = match data.ip_networks().iter().find(|&&x| x.addr.is_ipv4()) {
+            Some(ip) => format!("{}/{}", ip.addr, ip.prefix),
+            None => "接口没有IP".to_string(),
+        };
+        let mac = data.mac_address().to_string();
+        let desc = name.clone();
+        let id = if ip.contains("IP") || mac == "00:00:00:00:00:00" {
+            "-1".to_string()
+        } else {
+            "0".to_string()
+        };
+
+        a.push(
+            [("id", id), ("ip", ip), ("mac", mac), ("desc", desc)]
+                .into_iter()
+                .collect(),
+        );
+    }
+    // dbg!(&a);
+    a
+}
+
+/**发送wol报文，使用UDP协议，目的端口是7和9
 
 参数m 是冒号分割的mac地址，不区分大小写，如：11:22:33:44:55:ff
 
 参数broadcast是发送的目的地址，一般是网络的广播地址，比如255.255.255.255
 */
-pub fn send_wol_packet(m: &String, broadcast: &String) {
+pub fn send_wol_udp(m: &str, broadcast: &str) {
     let mac = mac_to_u8(m);
     let mut magic_packet = Vec::new();
     for _ in 1..=6 {
@@ -31,20 +61,19 @@ pub fn send_wol_packet(m: &String, broadcast: &String) {
 
 /** 发送ehtertype是0x0842类型的WOL报文
 
-interface_name是网口名称或网口的MAC地址，MAC地址是冒号分隔的格式
+nic是网口名称或网口的MAC地址，MAC地址是冒号分隔的格式
 
-m是将要唤醒的MAC地址
+target_mac是将要唤醒的MAC地址
  */
-pub fn send_wol_eth(interface_name: &String, m: &str) {
+pub fn send_wol_eth(nic: &str, target_mac: &str) {
     use pnet::datalink::Channel::Ethernet;
     use pnet::datalink::{self, NetworkInterface};
 
-    // Invoke as echo <interface name>
-    let interface_match = |iface: &NetworkInterface| iface.name == *interface_name || iface.mac.unwrap().to_string() == interface_name.to_lowercase();
+    let interface_match = |iface: &NetworkInterface| {
+        iface.name == nic || iface.mac.unwrap().to_string() == nic.to_lowercase()
+    };
 
-    // Find the network interface with the provided name
-    let interfaces = datalink::interfaces();
-    let interface = interfaces
+    let interface = datalink::interfaces()
         .into_iter()
         .filter(interface_match)
         .next()
@@ -61,7 +90,7 @@ pub fn send_wol_eth(interface_name: &String, m: &str) {
     };
 
     //构造并发送WOL报文
-    let mac = mac_to_u8(m);
+    let mac = mac_to_u8(target_mac);
     let mut magic_packet = Vec::new();
     for _ in 1..=6 {
         magic_packet.push(255);
@@ -79,17 +108,16 @@ pub fn send_wol_eth(interface_name: &String, m: &str) {
     tx.send_to(&eth_packet, None);
 }
 
-/**把mac地址转换为u8列表
+/**把mac地址转换为u8列表，不区分大小写
 
 比如 `01:02:03:dd:ee:ff => [1, 2, 3, 221, 238, 255]`
  */
 fn mac_to_u8(s: &str) -> Vec<u8> {
     let s1 = s.replace(":", "");
-    let val: Vec<u8> = bytes_str_to_u8(s1.as_str()).try_into().unwrap();
-    val
+    bytes_str_to_u8(&s1)
 }
 
-/** 把字节字符串转为u8列表
+/** 把字节字符串转为u8列表，不区分大小写
 
 比如 `"ff00ff10" => [255, 0, 255, 16]`
  */
@@ -131,10 +159,13 @@ mod tests {
             "期望是{:?}, hex_str_to_u8(\"aa:bb:cc:dd:ee:ff\")函数实际返回{:?}",
             a, b
         );
+
         assert_eq!(vec![1, 2, 3, 221, 238, 255], mac_to_u8("01:02:03:dd:ee:ff"));
+        assert_eq!(vec![1, 2, 3, 221, 238, 255], mac_to_u8("01:02:03:DD:ee:ff"));
 
-        assert_eq!((), send_wol_eth(&"BC:24:11:11:A0:F7".to_string(), "11:22:33:44:55:66"));
-
-
+        assert_eq!(
+            (),
+            send_wol_eth(&"BC:24:11:11:A0:F7".to_string(), "11:22:33:44:55:66")
+        );
     }
 }

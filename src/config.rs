@@ -1,6 +1,7 @@
 use configparser::ini::{Ini, WriteOptions};
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct WOLConfig {
     path: String,
     hosts: Vec<String>,

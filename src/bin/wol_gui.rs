@@ -1,29 +1,26 @@
 #![windows_subsystem = "windows"]
 
-#[cfg(not(debug_assertions))]
-use std::env;
-
 use enums::{Align, Color};
 use fltk::{prelude::*, *};
+use home::home_dir;
+use std::fs::create_dir_all;
 use wol::config::WOLConfig;
-use wol::utils::{send_wol_eth, send_wol_packet};
+use wol::utils::{netinfo, send_wol_eth, send_wol_udp};
 
 static WIDTH: i32 = 500;
 static HEIGHT: i32 = 400;
 
 fn main() {
-    #[cfg(not(debug_assertions))]
-    let mut wolcfg = WOLConfig::new(
-        env::current_exe()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .join("config.ini")
-            .to_str()
-            .unwrap(),
-    );
-    #[cfg(debug_assertions)]
-    let mut wolcfg = WOLConfig::new("config.ini");
+    let config_path = home_dir().unwrap().join(".config/wol_rust/config.ini");
+    if !config_path.exists() {
+        match create_dir_all(config_path.parent().unwrap()) {
+            Ok(_) => {
+                println!("OK")
+            }
+            Err(_) => println!("Err"),
+        }
+    }
+    let mut wolcfg = WOLConfig::new(config_path.to_str().unwrap());
 
     let app = app::App::default().load_system_fonts();
     let mut win = window::Window::default()
@@ -58,8 +55,11 @@ fn main_panel(parent: &mut group::Flex, wolcfg: &mut WOLConfig) {
 
         let mut op_col = group::Flex::default().column();
         let if_name_text = frame::Frame::default().with_label("网口:");
-        let mut if_name_input = input::Input::default();
-        if_name_input.set_value(wolcfg.get_interface().as_str());
+        let nic = netinfo();
+        let mut nic_choice = menu::Choice::default();
+        for i in &nic {
+            nic_choice.add_choice(&i["desc"]);
+        }
         let broadcast_text = frame::Frame::default().with_label("广播地址:");
         let mut broadcast_input = input::Input::default();
         broadcast_input.set_value(wolcfg.get_broadcast().as_str());
@@ -70,7 +70,7 @@ fn main_panel(parent: &mut group::Flex, wolcfg: &mut WOLConfig) {
             .with_size(50, 25);
 
         op_col.fixed(&if_name_text, 25);
-        op_col.fixed(&if_name_input, 25);
+        op_col.fixed(&nic_choice, 25);
         op_col.fixed(&broadcast_text, 25);
         op_col.fixed(&broadcast_input, 25);
         op_col.fixed(&p, 50);
@@ -90,10 +90,11 @@ fn main_panel(parent: &mut group::Flex, wolcfg: &mut WOLConfig) {
         });
 
         btn.set_callback(move |_btn| {
+            let active_nic = &nic[nic_choice.value() as usize]["mac"];
             if let Some(x) = host_list.selected_text() {
                 let host: Vec<&str> = x.split(",").collect();
-                send_wol_packet(&host[0].to_string(), &broadcast_input.value());
-                send_wol_eth(&if_name_input.value(), &host[0].to_string());
+                send_wol_udp(&host[0].to_string(), &broadcast_input.value());
+                send_wol_eth(&active_nic, &host[0].to_string());
             }
         });
     }

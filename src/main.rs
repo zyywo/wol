@@ -1,12 +1,11 @@
-#[cfg(not(debug_assertions))]
-use std::env;
-
 use clap::{
     ArgAction::{Help, SetTrue},
     Parser,
 };
 use wol::config::WOLConfig;
-use wol::utils::{send_wol_eth, send_wol_packet};
+use wol::utils::{send_wol_eth, send_wol_udp};
+use home::home_dir;
+use std::fs::create_dir_all;
 
 #[derive(Parser)]
 #[command(version, about, disable_help_flag = true, arg_required_else_help(true))]
@@ -25,18 +24,16 @@ struct App {
 }
 
 fn main() {
-    #[cfg(not(debug_assertions))]
-    let wolcfg = WOLConfig::new(
-        env::current_exe()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .join("config.ini")
-            .to_str()
-            .unwrap(),
-    );
-    #[cfg(debug_assertions)]
-    let wolcfg = WOLConfig::new("config.ini");
+    let config_path = home_dir().unwrap().join(".config/wol_rust/config.ini");
+    if !config_path.exists() {
+        match create_dir_all(config_path.parent().unwrap()) {
+            Ok(_) => {
+                println!("OK")
+            }
+            Err(_) => println!("Err"),
+        }
+    }
+    let wolcfg = WOLConfig::new(config_path.to_str().unwrap());
 
     let args = App::parse();
 
@@ -61,7 +58,7 @@ fn main() {
             Some(mac) => {
                 let br = wolcfg.get_broadcast();
                 send_wol_eth(&wolcfg.get_interface(), &mac);
-                send_wol_packet(&mac, &br);
+                send_wol_udp(&mac, &br);
                 println!(
                     "已向{}发送唤醒包，mac地址：{}，广播地址：{}",
                     &hostname, &mac, &br

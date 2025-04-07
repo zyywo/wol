@@ -3,8 +3,13 @@ name: Build Release
 on:  
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    paths:
+      - 'Cargo.toml'
+      - 'build.rs'
+      - 'favicon.ico'
+      - 'app-icon.rc'
+      - 'README*'
+      - 'src/**'
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -36,7 +41,7 @@ jobs:
           fi
       - if: ${{ steps.check-release.outputs.release_exists == 'false' }}
         run: |
-          gh release create v${{ steps.get-version.outputs.version }} --title v${{ steps.get-version.outputs.version }}
+          gh release create v${{ steps.get-version.outputs.version }} --title v${{ steps.get-version.outputs.version }} Packet.lib
 
   build-windows:
     needs: release
@@ -44,10 +49,6 @@ jobs:
     permissions: write-all
     steps:
     - uses: actions/checkout@v4
-    # - name: GitHub Tag Name example
-    #   run: |
-    #     echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
-    #     echo "Tag name from github.ref_name: ${{  github.ref_name }}"
     - name: Install CMake
       uses: ssrobins/install-cmake@v1
       with:

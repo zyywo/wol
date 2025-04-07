@@ -56,8 +56,8 @@ jobs:
     - name: Build
       run: |
         cargo build --release
-        mv target/release/wol.exe target/release/wol_cli_v${{ needs.release.outputs.version }}.exe
-        mv target/release/wol_gui.exe target/release/wol_gui_v${{ needs.release.outputs.version }}.exe
+        mv target/release/wol.exe target/release/wol_cli_windows_v${{ needs.release.outputs.version }}.exe
+        mv target/release/wol_gui.exe target/release/wol_gui_windows_v${{ needs.release.outputs.version }}.exe
     - run: |
         gh release upload v${{ needs.release.outputs.version }} target/release/wol_cli_windows_v${{ needs.release.outputs.version }}.exe
         gh release upload v${{ needs.release.outputs.version }} target/release/wol_gui_windows_v${{ needs.release.outputs.version }}.exe
@@ -73,8 +73,8 @@ jobs:
     - name: Build
       run: |
         cargo build --release
-        mv target/release/wol target/release/wol_cli_v${{ needs.release.outputs.version }}
-        mv target/release/wol_gui target/release/wol_gui_v${{ needs.release.outputs.version }}
+        mv target/release/wol target/release/wol_cli_linux_v${{ needs.release.outputs.version }}
+        mv target/release/wol_gui target/release/wol_gui_linux_v${{ needs.release.outputs.version }}
     - run: |
         gh release upload v${{ needs.release.outputs.version }} target/release/wol_cli_linux_v${{ needs.release.outputs.version }}
         gh release upload v${{ needs.release.outputs.version }} target/release/wol_gui_linux_v${{ needs.release.outputs.version }}

@@ -34,7 +34,7 @@ jobs:
           fi
           echo "$release"
           echo "$(gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }})"
-          gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }}"
+          gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }}
           echo "$?"
           echo $?
       - if: steps.check-release.outputs.release_exists == 'true'

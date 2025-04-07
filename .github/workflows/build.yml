@@ -26,12 +26,15 @@ jobs:
       - name: Check if release exists
         id: check-release
         run: |
-          gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }}
+          release=$(gh release list --json tagName)
+          echo "$release" | grep -q ${{ steps.get-version.outputs.version }}
           if [ $? -eq 0 ]; then
             echo "release_exists=true" >> $GITHUB_OUTPUT
           else
             echo "release_exists=false" >> $GITHUB_OUTPUT
           fi
+          echo "$release"
+          echo "$(gh release list --json tagName | grep ${{ steps.get-version.outputs.version }})"
           echo "${{ steps.check-release.outputs.release_exists }}"
       - if: steps.check-release.outputs.release_exists == 'true'
         run: |  

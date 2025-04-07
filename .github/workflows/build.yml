@@ -26,16 +26,21 @@ jobs:
       - name: Check if release exists
         id: check-release
         run: |
-          release=$(gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }};echo $?)
-          if [ "$release" === "0" ]; then
+          # release=$(gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }};echo $?)
+          # if [ "$release" === "0" ]; then
+          #   echo "release_exists=true" >> $GITHUB_OUTPUT
+          # else
+          #   echo "release_exists=false" >> $GITHUB_OUTPUT
+          # fi
+          gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }}
+          if [ $? -eq 0 ]; then
             echo "release_exists=true" >> $GITHUB_OUTPUT
           else
             echo "release_exists=false" >> $GITHUB_OUTPUT
           fi
-          echo "$release"
-          echo "$(gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }})"
           gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }}
           echo "$?"
+          gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }}
           echo $?
       - if: steps.check-release.outputs.release_exists == 'true'
         run: |
@@ -61,8 +66,8 @@ jobs:
         mv target/release/wol.exe target/release/wol_cli_v${{ needs.release.outputs.version }}.exe
         mv target/release/wol_gui.exe target/release/wol_gui_v${{ needs.release.outputs.version }}.exe
     - run: |
-        gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_cli_v${{ needs.release.outputs.version }}.exe
-        gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_gui_v${{ needs.release.outputs.version }}.exe
+        gh release upload v${{ needs.release.outputs.version }} target/release/wol_cli_v${{ needs.release.outputs.version }}.exe
+        gh release upload v${{ needs.release.outputs.version }} target/release/wol_gui_v${{ needs.release.outputs.version }}.exe
   
   build-linux:
     needs: release
@@ -78,5 +83,5 @@ jobs:
         mv target/release/wol target/release/wol_cli_v${{ needs.release.outputs.version }}
         mv target/release/wol_gui target/release/wol_gui_v${{ needs.release.outputs.version }}
     - run: |
-        gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_cli_v${{ needs.release.outputs.version }}
-        gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_gui_v${{ needs.release.outputs.version }}
+        gh release upload v${{ needs.release.outputs.version }} target/release/wol_cli_v${{ needs.release.outputs.version }}
+        gh release upload v${{ needs.release.outputs.version }} target/release/wol_gui_v${{ needs.release.outputs.version }}

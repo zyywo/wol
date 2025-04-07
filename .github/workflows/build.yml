@@ -10,34 +10,54 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get version
+        id: get-version
+        run: |
+          echo "version=$(sed -nr 's/^version = "([0-9.]+)"/\1/p' Cargo.toml)" >> $GITHUB_OUTPUT
+      - run: |
+          gh release create v${{ steps.get-version.outputs.version }}
+
   build-windows:
+    needs: release
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    - name: GitHub Tag Name example
+    # - name: GitHub Tag Name example
+    #   run: |
+    #     echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
+    #     echo "Tag name from github.ref_name: ${{  github.ref_name }}"
+    - name: Install CMake
+      uses: ssrobins/install-cmake@v1
+      with:
+        version: 3.24.3
+    - name: Build
       run: |
-        echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
-        echo "Tag name from github.ref_name: ${{  github.ref_name }}"
-    # - name: Install Latest CMake
-    #   uses: ssrobins/install-cmake@v1
-    #   with:
-    #     version: 3.24.3
-    # - name: Build
-    #   run: cargo build --bin wol
-    # - name: Release
-    #   uses: softprops/action-gh-release@v2
-    #   if: startsWith(github.ref, 'refs/tags/')
-
-  # build-linux:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #   - name: Install fltk build dependencies
-  #     run: sudo apt-get install -y libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpango1.0-dev libgl1-mesa-dev libglu1-mesa-dev
-  #   - name: Build
-  #     run: |
-  #       cargo build
-        
-  #   - name: Release
-  #     uses: softprops/action-gh-release@v2
-  #     if: startsWith(github.ref, 'refs/tags/')
+        cargo build
+        mv target/release/wol.exe target/release/wol_cli_v${{ needs.release.outputs.version }}.exe
+        mv target/release/wol_gui.exe target/release/wol_gui_v${{ needs.release.outputs.version }}.exe
+    - run: |
+        gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_cli_v${{ needs.release.outputs.version }}.exe
+        gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_gui_v${{ needs.release.outputs.version }}.exe
+  
+  build-linux:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install fltk build dependencies
+      run: sudo apt-get install -y libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpango1.0-dev libgl1-mesa-dev libglu1-mesa-dev
+    - name: Build
+      run: |
+        cargo build
+        mv target/release/wol target/release/wol_cli_v${{ needs.release.outputs.version }}
+        mv target/release/wol_gui target/release/wol_gui_v${{ needs.release.outputs.version }}
+    - run: |
+        gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_cli_v${{ needs.release.outputs.version }}
+        gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_gui_v${{ needs.release.outputs.version }}

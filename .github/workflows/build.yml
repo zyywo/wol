@@ -34,8 +34,10 @@ jobs:
           # fi
           gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }}
           if [ $? -eq 0 ]; then
+            echo "true"
             echo "release_exists=true" >> $GITHUB_OUTPUT
           else
+            echo "false"
             echo "release_exists=false" >> $GITHUB_OUTPUT
           fi
           gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }}

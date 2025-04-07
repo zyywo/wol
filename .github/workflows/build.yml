@@ -25,10 +25,13 @@ jobs:
     runs-on: unbuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Install fltk build dependencies
+      run: sudo apt-get install -y libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpango1.0-dev libgl1-mesa-dev libglu1-mesa-dev
     - name: Build
-      run: |
-          export DISPLAY=:99
-          sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 &
-          cargo build
+      run: cargo build
+      # run: |
+      #     export DISPLAY=:99
+      #     sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 &
+      #     cargo build
     - name: Run tests
       run: cargo test

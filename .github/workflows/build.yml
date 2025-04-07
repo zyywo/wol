@@ -23,18 +23,23 @@ jobs:
         id: get-version
         run: |
           echo "version=$(sed -nr 's/^version = "([0-9.]+)"/\1/p' Cargo.toml)" >> $GITHUB_OUTPUT
+      # - name: Get tag
+      #   id: get-tag
+      #   run: |
+      #     release=$(gh release list --json tagName)
+      #     echo "$release"
       - name: Check if release exists
         id: check-release
         run: |
-          release=$(gh release list --json tagName)
-          echo "$release" | grep -q ${{ steps.get-version.outputs.version }}
-          if [ $? -eq 0 ]; then
+          release=$(gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }};echo $?)
+          if [ "$release" === "0" ]; then
             echo "release_exists=true" >> $GITHUB_OUTPUT
           else
             echo "release_exists=false" >> $GITHUB_OUTPUT
           fi
           echo "$release"
-          echo "$(gh release list --json tagName | grep ${{ steps.get-version.outputs.version }})"
+          echo "$(gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }})"
+          echo "$?"
           echo "${{ steps.check-release.outputs.release_exists }}"
       - if: steps.check-release.outputs.release_exists == 'true'
         run: |  

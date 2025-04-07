@@ -42,7 +42,7 @@ jobs:
         version: 3.24.3
     - name: Build
       run: |
-        cargo build
+        cargo build --release
         mv target/release/wol.exe target/release/wol_cli_v${{ needs.release.outputs.version }}.exe
         mv target/release/wol_gui.exe target/release/wol_gui_v${{ needs.release.outputs.version }}.exe
     - run: |
@@ -59,7 +59,7 @@ jobs:
       run: sudo apt-get install -y libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpango1.0-dev libgl1-mesa-dev libglu1-mesa-dev
     - name: Build
       run: |
-        cargo build
+        cargo build --release
         mv target/release/wol target/release/wol_cli_v${{ needs.release.outputs.version }}
         mv target/release/wol_gui target/release/wol_gui_v${{ needs.release.outputs.version }}
     - run: |

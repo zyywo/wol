@@ -23,11 +23,6 @@ jobs:
         id: get-version
         run: |
           echo "version=$(sed -nr 's/^version = "([0-9.]+)"/\1/p' Cargo.toml)" >> $GITHUB_OUTPUT
-      # - name: Get tag
-      #   id: get-tag
-      #   run: |
-      #     release=$(gh release list --json tagName)
-      #     echo "$release"
       - name: Check if release exists
         id: check-release
         run: |
@@ -39,48 +34,49 @@ jobs:
           fi
           echo "$release"
           echo "$(gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }})"
+          gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }})"
           echo "$?"
-          echo "${{ steps.check-release.outputs.release_exists }}"
+          echo $?
       - if: steps.check-release.outputs.release_exists == 'true'
-        run: |  
+        run: |
           gh release create v${{ steps.get-version.outputs.version }} --title v${{ steps.get-version.outputs.version }}
 
-  # build-windows:
-  #   needs: release
-  #   runs-on: windows-latest
-  #   permissions: write-all
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #   # - name: GitHub Tag Name example
-  #   #   run: |
-  #   #     echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
-  #   #     echo "Tag name from github.ref_name: ${{  github.ref_name }}"
-  #   - name: Install CMake
-  #     uses: ssrobins/install-cmake@v1
-  #     with:
-  #       version: 3.24.3
-  #   - name: Build
-  #     run: |
-  #       cargo build --release
-  #       mv target/release/wol.exe target/release/wol_cli_v${{ needs.release.outputs.version }}.exe
-  #       mv target/release/wol_gui.exe target/release/wol_gui_v${{ needs.release.outputs.version }}.exe
-  #   - run: |
-  #       gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_cli_v${{ needs.release.outputs.version }}.exe
-  #       gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_gui_v${{ needs.release.outputs.version }}.exe
+  build-windows:
+    needs: release
+    runs-on: windows-latest
+    permissions: write-all
+    steps:
+    - uses: actions/checkout@v4
+    # - name: GitHub Tag Name example
+    #   run: |
+    #     echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
+    #     echo "Tag name from github.ref_name: ${{  github.ref_name }}"
+    - name: Install CMake
+      uses: ssrobins/install-cmake@v1
+      with:
+        version: 3.24.3
+    - name: Build
+      run: |
+        cargo build --release
+        mv target/release/wol.exe target/release/wol_cli_v${{ needs.release.outputs.version }}.exe
+        mv target/release/wol_gui.exe target/release/wol_gui_v${{ needs.release.outputs.version }}.exe
+    - run: |
+        gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_cli_v${{ needs.release.outputs.version }}.exe
+        gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_gui_v${{ needs.release.outputs.version }}.exe
   
-  # build-linux:
-  #   needs: release
-  #   runs-on: ubuntu-latest
-  #   permissions: write-all
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #   - name: Install fltk build dependencies
-  #     run: sudo apt-get install -y libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpango1.0-dev libgl1-mesa-dev libglu1-mesa-dev
-  #   - name: Build
-  #     run: |
-  #       cargo build --release
-  #       mv target/release/wol target/release/wol_cli_v${{ needs.release.outputs.version }}
-  #       mv target/release/wol_gui target/release/wol_gui_v${{ needs.release.outputs.version }}
-  #   - run: |
-  #       gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_cli_v${{ needs.release.outputs.version }}
-  #       gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_gui_v${{ needs.release.outputs.version }}
+  build-linux:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install fltk build dependencies
+      run: sudo apt-get install -y libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpango1.0-dev libgl1-mesa-dev libglu1-mesa-dev
+    - name: Build
+      run: |
+        cargo build --release
+        mv target/release/wol target/release/wol_cli_v${{ needs.release.outputs.version }}
+        mv target/release/wol_gui target/release/wol_gui_v${{ needs.release.outputs.version }}
+    - run: |
+        gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_cli_v${{ needs.release.outputs.version }}
+        gh release upload v${{ steps.get-version.outputs.version }} target/release/wol_gui_v${{ needs.release.outputs.version }}

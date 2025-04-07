@@ -1,4 +1,4 @@
-name: Build
+name: Build Release
 
 on:  
   push:
@@ -38,6 +38,9 @@ jobs:
           else
             echo "release_exists=false" >> $GITHUB_OUTPUT
           fi
+          gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }}
+          a=$?
+          echo $a
           gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }}
           echo "$?"
           gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }}

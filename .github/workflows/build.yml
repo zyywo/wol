@@ -22,19 +22,19 @@ jobs:
         id: get-version
         run: |
           echo "version=$(sed -nr 's/^version = "([0-9.]+)"/\1/p' Cargo.toml)" >> $GITHUB_OUTPUT
-      - name: Check if release exists
-        id: check-release
-        run: |
-          gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }}
-          if [ $? -eq 0 ]; then
-            echo "true"
-            echo "release_exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "false"
-            echo "release_exists=false" >> $GITHUB_OUTPUT
-          fi
-      - if: ${{ steps.check-release.outputs.release_exists == 'false' }}
-        run: |
+      # - name: Check if release exists
+      #   id: check-release
+      #   run: |
+      #     gh release list --json tagName | grep -q ${{ steps.get-version.outputs.version }}
+      #     if [ $? -eq 0 ]; then
+      #       echo "true"
+      #       echo "release_exists=true" >> $GITHUB_OUTPUT
+      #     else
+      #       echo "false"
+      #       echo "release_exists=false" >> $GITHUB_OUTPUT
+      #     fi
+      # - if: ${{ steps.check-release.outputs.release_exists == 'false' }}
+      - run: |
           gh release create v${{ steps.get-version.outputs.version }} --title v${{ steps.get-version.outputs.version }} Packet.lib
 
   build-windows:

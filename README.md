@@ -12,8 +12,11 @@
 
 三种方式的唤醒包构造都相同。
 
-需要唤醒的目标在配置文件里预先设置，配置文件`config.ini`和可执行文件同一目录，如果配置文件不存在，运行程序时会自动生成。
+需要唤醒的电脑预先在配置文件里设置，配置文件路径（如果配置文件不存在运行程序时会自动生成）：
 
+**Windows**: `%HOMEPATH%\.config\wol_rust\config.ini`
+
+**Linux**: `$HOME/.config/wol_rust/config.ini`
 
 > linux平台：
 因为有发送以太网报文、UDP发送目的地址为广播地址，所以需要root权限才可以运行，

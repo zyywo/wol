@@ -2,14 +2,8 @@ name: Build Release
 
 on:  
   push:
-    branches: [ "master" ]
-    paths:
-      - 'Cargo.toml'
-      - 'build.rs'
-      - 'favicon.ico'
-      - 'app-icon.rc'
-      - 'README*'
-      - 'src/**'
+    tags:
+      - "v*"
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

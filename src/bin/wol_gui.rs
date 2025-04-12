@@ -60,6 +60,7 @@ fn main_panel(parent: &mut group::Flex, wolcfg: &mut WOLConfig) {
         for i in &nic {
             nic_choice.add_choice(&i["desc"]);
         }
+        nic_choice.set_value(0);
         let broadcast_text = frame::Frame::default().with_label("广播地址:");
         let mut broadcast_input = input::Input::default();
         broadcast_input.set_value(wolcfg.get_broadcast().as_str());

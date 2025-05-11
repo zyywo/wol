@@ -24,7 +24,7 @@ fn main() {
 
     let app = app::App::default().load_system_fonts();
     let mut win = window::Window::default()
-        .with_label(format!("Wake On LAN - rust v{}", env!("CARGO_PKG_VERSION")).as_str())
+        .with_label(format!("Wake On LAN - v{}", env!("CARGO_PKG_VERSION")).as_str())
         .with_size(WIDTH, HEIGHT);
     let mut col = group::Flex::default_fill().column();
     main_panel(&mut col, &mut wolcfg);

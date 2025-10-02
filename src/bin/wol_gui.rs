@@ -4,8 +4,9 @@ use enums::{Align, Color};
 use fltk::{prelude::*, *};
 use home::home_dir;
 use std::fs::create_dir_all;
+use wake_on_lan::{send_wol_eth, send_wol_udp};
 use wol::config::WOLConfig;
-use wol::utils::{netinfo, send_wol_eth, send_wol_udp};
+use wol::utils::netinfo;
 
 static WIDTH: i32 = 500;
 static HEIGHT: i32 = 400;

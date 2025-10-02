@@ -51,6 +51,7 @@ impl WOLConfig {
                 let mac = i.1.get("mac").unwrap().as_ref().unwrap().clone();
                 self.hosts_dict.insert(hostname.clone(), mac.clone());
                 self.hosts.push(format!("{},{}", mac, hostname));
+                self.hosts.sort();
             }
         }
         self

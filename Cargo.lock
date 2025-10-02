@@ -566,6 +566,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5902c5d130972a0000f60860bfbf46f7ca3db5391eddfedd1b8728bd9dc96c0e"
 
 [[package]]
+name = "type-conversion"
+version = "0.1.0"
+source = "git+https://gitee.com/zyy2git/mylib.git#005bd8c15e2c132f6f05957e7b9b7a709c4abb8f"
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -595,6 +600,15 @@ checksum = "d3b17ae1f6c8a2b28506cd96d412eebf83b4a0ff2cbefeeb952f2f9dfa44ba18"
 dependencies = [
  "cc",
  "libc",
+]
+
+[[package]]
+name = "wake-on-lan"
+version = "0.1.0"
+source = "git+https://gitee.com/zyy2git/mylib.git#005bd8c15e2c132f6f05957e7b9b7a709c4abb8f"
+dependencies = [
+ "pnet",
+ "type-conversion",
 ]
 
 [[package]]
@@ -832,7 +846,7 @@ dependencies = [
 
 [[package]]
 name = "wol"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "clap",
  "configparser",
@@ -841,4 +855,5 @@ dependencies = [
  "home",
  "pnet",
  "sysinfo",
+ "wake-on-lan",
 ]

@@ -1,6 +1,6 @@
 [package]
 name = "wol"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 
 [dependencies]
@@ -10,6 +10,7 @@ configparser = "3.1.0"
 pnet = "0.35.0"
 sysinfo = "0.34.2"
 home = "0.5.11"
+wake-on-lan = { git = "https://gitee.com/zyy2git/mylib.git", version = "0.1.0" }
 
 [build-dependencies]
 embed-resource = "3.0.1"

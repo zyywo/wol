@@ -2,10 +2,10 @@ use clap::{
     ArgAction::{Help, SetTrue},
     Parser,
 };
-use wol::config::WOLConfig;
-use wol::utils::{send_wol_eth, send_wol_udp};
 use home::home_dir;
 use std::fs::create_dir_all;
+use wake_on_lan::{send_wol_eth, send_wol_udp};
+use wol::config::WOLConfig;
 
 #[derive(Parser)]
 #[command(version, about, disable_help_flag = true, arg_required_else_help(true))]
